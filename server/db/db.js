@@ -22,7 +22,7 @@ async function connectDB() {
       console.log('MongoDB already connected');
       return mongoose.connection;
     }
-    // For MongoDB Atlas v7+, use this simplified connection
+
     await mongoose.connect(process.env.MONGODB_URI);
     
     isConnected = true;
@@ -41,13 +41,6 @@ async function connectDB() {
     console.error('❌ MongoDB connection error:', error);
     process.exit(1);
   }
-
-  if (!db) {
-    await client.connect();
-    db = client.db("patientlydb");
-    console.log("MongoDB connected");
-  }
-  return db;
 }
 
 module.exports = { connectDB };
