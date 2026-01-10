@@ -15,11 +15,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-const PORT = process.env.VITE_PORT || 5000;
+const PORT = 5000;
 
-app.get("/api", (req, res) => {
-  res.json({ message: "Hello from the server!" });
-});
+const userRoutes = require('./routes/userRoutes');
+
+app.use('/api/users', userRoutes);
 
 async function startServer() {
   try {
