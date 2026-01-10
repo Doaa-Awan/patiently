@@ -22,7 +22,7 @@ export function RoleSelection({ onSelect }) {
       <div className="max-w-2xl w-full">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-stone-900 mb-4 tracking-tight">
-            Welcome to <span className="text-emerald-600">HealthJournal</span>
+            Welcome to <span className="text-emerald-600">Patiently</span>
           </h1>
           <p className="text-xl text-stone-600">
             A simple way to track symptoms and communicate with your care team.
