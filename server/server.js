@@ -19,7 +19,10 @@ const PORT = 5000;
 
 const userRoutes = require('./routes/userRoutes');
 
+const symptomRoutes = require('./routes/symptomRoutes');
+
 app.use('/api/users', userRoutes);
+app.use('/api/symptoms', symptomRoutes);
 
 async function startServer() {
   try {

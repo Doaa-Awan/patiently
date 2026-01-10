@@ -1,23 +1,15 @@
 const mongoose = require('mongoose');
 
 const symptomSchema = new mongoose.Schema({
-  patientId: {
+  patient: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
   
-  recordedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  
-  name: {
+  symptom: {
     type: String,
-    required: true,
-    trim: true,
-    lowercase: true
+    required: true
   },
   
   severity: {
@@ -27,43 +19,14 @@ const symptomSchema = new mongoose.Schema({
     max: 10
   },
   
-  location: {
-    type: String,
-    trim: true
-  },
-  
-  startedAt: {
+  startTime: {
     type: Date,
     default: Date.now
   },
   
-  endedAt: {
-    type: Date
-  },
-
-  // How long it lasted (in minutes)
-  duration: Number || null, // Make this optional?
+  notes: String
   
-  // Notes
-  notes: {
-    type: String,
-    maxlength: 200
-  },
-  
-  // Status
-  status: {
-    type: String,
-    enum: ['active', 'resolved', 'worsening', 'improving'],
-    default: 'active'
-  },
-  
-  // Timestamps
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
 }, {
-  // Auto-create createdAt and updatedAt
   timestamps: true
 });
 

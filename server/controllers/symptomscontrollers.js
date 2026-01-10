@@ -2,8 +2,8 @@ const SymptomEntry = require('../models/symptoms');
 
 exports.createSymptomEntry = async (req, res) => {
   try {
-    const { patient, symptom, severity, startTime, location, notes } = req.body;
-    const recordedBy = req.user.id;
+    const { patient, symptom, severity, startTime, notes } = req.body;
+    // const recordedBy = req.user.id;
 
     // Basic validation
     if (!patient || !symptom || !severity || !startTime) {
@@ -13,23 +13,18 @@ exports.createSymptomEntry = async (req, res) => {
       });
     }
 
-    // Create symptom entry
     const symptomEntry = await SymptomEntry.create({
-      patient,
-      recordedBy,
+      patient, 
       symptom,
       severity,
-      severityDescription: getSeverityDescription(severity),
-      startTime: new Date(startTime),
-      location: location || [],
-      notes,
-      tags: req.body.tags || []
+      startedTime: new Date(startTime),
+      notes
     });
 
     // Populate patient and recorder info
     const populatedEntry = await SymptomEntry.findById(symptomEntry._id)
       .populate('patient', 'name email role')
-      .populate('recordedBy', 'name role');
+      // .populate('recordedBy', 'name role');
 
     res.status(201).json({
       success: true,
@@ -66,7 +61,7 @@ exports.getPatientSymptoms = async (req, res) => {
 
     // Execute query
     const symptoms = await SymptomEntry.find(query)
-      .populate('recordedBy', 'name role')
+      // .populate('recordedBy', 'name role')
       .sort({ startTime: -1 })
       .limit(parseInt(limit));
 
