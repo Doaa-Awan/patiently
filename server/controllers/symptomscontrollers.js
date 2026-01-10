@@ -1,8 +1,10 @@
 const SymptomEntry = require('../models/symptoms');
+const mongoose = require('mongoose');
+const User = require('../models/users');
 
 exports.createSymptomEntry = async (req, res) => {
   try {
-    const { patient, symptom, severity, startTime, notes } = req.body;
+    const { patient, symptom, severity, startTime, notes, category } = req.body;
     // const recordedBy = req.user.id;
 
     // Basic validation
@@ -13,11 +15,31 @@ exports.createSymptomEntry = async (req, res) => {
       });
     }
 
+    // Validate patient ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(patient)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid patient ID format. Patient ID must be a valid MongoDB ObjectId.',
+        error: `Received: ${patient}`
+      });
+    }
+
+    // Check if patient exists
+    const patientExists = await User.findById(patient);
+    if (!patientExists) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found. Please ensure the patient exists in the database.',
+        error: `Patient with ID ${patient} does not exist`
+      });
+    }
+
     const symptomEntry = await SymptomEntry.create({
       patient, 
       symptom,
+      category: category || 'Other',
       severity,
-      startedTime: new Date(startTime),
+      startTime: new Date(startTime),
       notes
     });
 
@@ -45,10 +67,27 @@ exports.createSymptomEntry = async (req, res) => {
 exports.getPatientSymptoms = async (req, res) => {
   try {
     const { patientId } = req.query;
-    const symptoms = await SymptomEntry.find({ patientId: patientId });
-    res.json(symptoms);
+    
+    if (!patientId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Patient ID is required'
+      });
+    }
+
+    const symptoms = await SymptomEntry.find({ patient: patientId })
+      .populate('patient', 'name email role')
+      .sort({ startTime: -1 });
+    
+    res.json({
+      success: true,
+      data: symptoms
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 };
 

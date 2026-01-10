@@ -1,22 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Mic, Keyboard } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '../components/ui/Button';
-import { Input, Textarea } from '../components/ui/Input';
+import { Textarea } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Card } from '../components/ui/Card';
 import { VoiceRecorder } from '../components/VoiceRecorder';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export function Dashboard({ userRole }) {
-  const [entries, setEntries] = useLocalStorage('symptom_entries', []);
+  const [entries, setEntries] = useState([]);
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState(5);
   const [category, setCategory] = useState('Other');
   const [inputMode, setInputMode] = useState('voice');
   const [isSaved, setIsSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedPatient] = useLocalStorage('selected_patient', null);
+  const [patientId, setPatientId] = useState(null);
 
   const categories = [
     { value: 'Pain', label: 'Pain' },
@@ -36,29 +40,135 @@ export function Dashboard({ userRole }) {
     label: `${i + 1} - ${i === 0 ? 'Mild' : i === 9 ? 'Severe' : ''}`,
   }));
 
-  const handleSave = () => {
-    if (!description.trim()) return;
-
-    const newEntry = {
-      id: uuidv4(),
-      date: new Date().toISOString(),
-      description,
-      severity,
-      category,
+  // Map API response to frontend format
+  const mapApiEntryToFrontend = (apiEntry) => {
+    return {
+      id: apiEntry._id,
+      date: apiEntry.startTime,
+      description: apiEntry.symptom,
+      severity: apiEntry.severity,
+      category: apiEntry.category || 'Other',
       userRole: userRole || 'patient',
-      createdAt: Date.now(),
+      createdAt: apiEntry.startTime ? new Date(apiEntry.startTime).getTime() : apiEntry.createdAt ? new Date(apiEntry.createdAt).getTime() : Date.now(),
+    };
+  };
+
+  // Fetch or get patient ID
+  useEffect(() => {
+    const getPatientId = async () => {
+      try {
+        // If we have a selected patient with a valid MongoDB ObjectId, use it
+        if (selectedPatient?.id && /^[0-9a-fA-F]{24}$/.test(selectedPatient.id)) {
+          setPatientId(selectedPatient.id);
+          return;
+        }
+
+        // Otherwise, try to get the first patient from the database
+        const usersResponse = await fetch(`${API_BASE}/api/users?role=patient&limit=1`);
+        const usersResult = await usersResponse.json();
+        
+        if (usersResult.success && usersResult.data && usersResult.data.length > 0) {
+          setPatientId(usersResult.data[0]._id);
+        } else {
+          // No patients exist - user needs to create one first
+          console.warn('No patients found in database. Please create a patient first.');
+          setPatientId(null);
+        }
+      } catch (error) {
+        console.error('Error fetching patient:', error);
+        setPatientId(null);
+      }
     };
 
-    setEntries((prev) => [newEntry, ...prev]);
-    setIsSaved(true);
+    getPatientId();
+  }, [selectedPatient]);
 
-    setTimeout(() => {
-      setDescription('');
-      setSeverity(5);
-      setCategory('Other');
-      setIsSaved(false);
-      setInputMode('voice');
-    }, 2000);
+  // Fetch entries from API
+  useEffect(() => {
+    if (!patientId) {
+      setIsLoading(false);
+      setEntries([]);
+      return;
+    }
+
+    const fetchEntries = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`${API_BASE}/api/symptoms/getsymptoms?patientId=${patientId}`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          const mappedEntries = result.data.map(mapApiEntryToFrontend);
+          setEntries(mappedEntries);
+        } else if (Array.isArray(result)) {
+          // Fallback for old API format
+          const mappedEntries = result.map(mapApiEntryToFrontend);
+          setEntries(mappedEntries);
+        }
+      } catch (error) {
+        console.error('Error fetching entries:', error);
+        // Keep entries as empty array on error
+        setEntries([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEntries();
+  }, [patientId, userRole]);
+
+  const handleSave = async () => {
+    if (!description.trim()) return;
+
+    if (!patientId) {
+      alert('No patient selected. Please select a patient first or create one in the database.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/symptoms/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          patient: patientId,
+          symptom: description,
+          severity: severity,
+          category: category,
+          startTime: new Date().toISOString(),
+          notes: description, // Using description as notes for now
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Server error response:', result);
+        alert(`Failed to save entry: ${result.message || result.error || 'Unknown error'}`);
+        return;
+      }
+
+      if (result.success && result.data) {
+        const newEntry = mapApiEntryToFrontend(result.data);
+        setEntries((prev) => [newEntry, ...prev]);
+        setIsSaved(true);
+
+        setTimeout(() => {
+          setDescription('');
+          setSeverity(5);
+          setCategory('Other');
+          setIsSaved(false);
+          setInputMode('voice');
+        }, 2000);
+      } else {
+        console.error('Error saving entry:', result);
+        alert(`Failed to save entry: ${result.message || result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error saving entry:', error);
+      alert(`Failed to save entry: ${error.message || 'Network error'}`);
+    }
   };
 
   const greeting =
@@ -173,7 +283,11 @@ export function Dashboard({ userRole }) {
           </span>
         </div>
 
-        {entries.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-8 bg-stone-50 rounded-lg border border-stone-100 border-dashed">
+            <p className="text-stone-500">Loading entries...</p>
+          </div>
+        ) : entries.length === 0 ? (
           <div className="text-center py-8 bg-stone-50 rounded-lg border border-stone-100 border-dashed">
             <p className="text-stone-500">
               No entries yet. Start by recording how you feel.

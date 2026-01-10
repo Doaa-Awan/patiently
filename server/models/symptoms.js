@@ -12,6 +12,12 @@ const symptomSchema = new mongoose.Schema({
     required: true
   },
   
+  category: {
+    type: String,
+    required: true,
+    default: 'Other'
+  },
+  
   severity: {
     type: Number,
     required: true,

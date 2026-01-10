@@ -6,6 +6,12 @@ const userController = require('../controllers/usercontrollers');
 // POST /api/users/register - Register new user
 router.post('/register', userController.createUser); // Uses createUser controller
 
+// GET /api/users - Get all users (with optional role filter)
+router.get('/', userController.getAllUsers);
+
+// GET /api/users/:id - Get user by ID
+router.get('/:id', userController.getUserById);
+
 // (ToDO later!!) Apply authentication middleware to all routes below
 // router.use(authenticate);
 
