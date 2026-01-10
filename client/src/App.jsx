@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
   useLocation,
+  useNavigate,
 } from 'react-router-dom';
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
@@ -18,9 +19,10 @@ import { Navigation } from './components/Navigation';
 import { useLocalStorage } from './hooks/useLocalStorage';
 
 
-function Layout({ children }) {
+function Layout({ children, setUserRole }) {
   const location = useLocation();
-  const isRoleSelection = location.pathname === '/';
+  const navigate = useNavigate();
+  const isRoleSelection = location.pathname === '/' || location.pathname === '/role';
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 font-sans">
@@ -29,16 +31,49 @@ function Layout({ children }) {
           !isRoleSelection ? 'mb-20 md:mb-0 md:pl-24' : ''
         }`}
       >
+        {!isRoleSelection && (
+          <div className="flex items-center justify-between md:hidden mb-4">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-emerald-600 rounded-lg mr-3" />
+              <span className="text-lg font-bold text-stone-900">HealthJournal</span>
+            </div>
+            <div>
+              <button
+                className="text-sm text-stone-500 hover:text-stone-900"
+                onClick={() => {
+                  setUserRole(null);
+                  navigate('/role');
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
+
         {children}
       </main>
 
       {!isRoleSelection && (
         <div className="md:fixed md:left-0 md:top-0 md:bottom-0 md:w-64 md:border-r md:border-stone-200 md:bg-white md:z-50">
-          <div className="hidden md:flex items-center p-6 mb-6">
-            <div className="w-8 h-8 bg-emerald-600 rounded-lg mr-3" />
-            <span className="text-xl font-bold text-stone-900">
-              HealthJournal
-            </span>
+          <div className="hidden md:flex items-center p-6 mb-6 justify-between">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-emerald-600 rounded-lg mr-3" />
+              <span className="text-xl font-bold text-stone-900">
+                HealthJournal
+              </span>
+            </div>
+            <div>
+              <button
+                className="text-sm text-stone-500 hover:text-stone-900"
+                onClick={() => {
+                  setUserRole(null);
+                  navigate('/role');
+                }}
+              >
+                Logout
+              </button>
+            </div>
           </div>
           <Navigation />
         </div>
@@ -46,6 +81,10 @@ function Layout({ children }) {
     </div>
   );
 }
+<div className="bg-emerald-600 text-white p-6 rounded-xl">
+  Tailwind is finally working 🎉
+</div>
+
 
 function ProtectedRoute({ children, role }) {
   if (!role) {
@@ -60,7 +99,7 @@ export function App() {
 
   return (
     <Router>
-      <Layout>
+      <Layout setUserRole={setUserRole}>
         <Routes>
           <Route
             path="/"
@@ -71,6 +110,11 @@ export function App() {
                 <RoleSelection onSelect={setUserRole} />
               )
             }
+          />
+
+          <Route
+            path="/role"
+            element={<RoleSelection onSelect={setUserRole} />}
           />
 
           <Route
