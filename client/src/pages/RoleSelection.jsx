@@ -7,9 +7,15 @@ export function RoleSelection({ onSelect }) {
   const navigate = useNavigate();
 
   const handleSelect = (role) => {
+    // Set the role first, then navigate. Deferring navigation avoids a race with ProtectedRoute.
     onSelect(role);
-    navigate('/dashboard');
-  };
+
+    if (role === 'caregiver') {
+      setTimeout(() => navigate('/patients'), 0);
+    } else {
+      navigate('/dashboard');
+    }
+  }; 
 
   return (
     <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">

@@ -14,6 +14,7 @@ import './App.css'
 import { RoleSelection } from './pages/RoleSelection';
 import { Dashboard } from './pages/Dashboard';
 import { Timeline } from './pages/Timeline';
+import { Patients } from './pages/Patients';
 import { ReportGenerator } from './pages/ReportGenerator';
 import { Navigation } from './components/Navigation';
 import { useLocalStorage } from './hooks/useLocalStorage';
@@ -131,6 +132,15 @@ export function App() {
             element={
               <ProtectedRoute role={userRole}>
                 <Timeline />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/patients"
+            element={
+              <ProtectedRoute role={userRole}>
+                <Patients />
               </ProtectedRoute>
             }
           />
