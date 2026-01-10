@@ -1,0 +1,24 @@
+{
+  "name": "patiently",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Doaa-Awan/patiently.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Doaa-Awan/patiently/issues"
+  },
+  "homepage": "https://github.com/Doaa-Awan/patiently#readme",
+  "dependencies": {
+    "mongodb": "^7.0.0"
+  }
+}
