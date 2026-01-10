@@ -2,6 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
+const { connectDB } = require("./db/db");
 
 //cors to connect to frontend
 const cors = require('cors');
@@ -16,6 +17,26 @@ app.use(express.json());
 
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 const PORT = process.env.VITE_PORT || 5000;
+
+const userRoutes = require('./routes/userRoutes');
+
+const symptomRoutes = require('./routes/symptomRoutes');
+
+app.use('/api/users', userRoutes);
+app.use('/api/symptoms', symptomRoutes);
+
+async function startServer() {
+  try {
+    const db = await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error("Failed to start server", err);
+    process.exit(1);
+  }
+}
 
 if (!OPENROUTER_KEY) {
   console.warn('Warning: OPENROUTER_API_KEY is not set. The /api/openrouter endpoint will return 500 responses until it is configured.');
@@ -64,6 +85,4 @@ app.post('/api/openrouter', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+startServer();
