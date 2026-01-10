@@ -44,43 +44,11 @@ exports.createSymptomEntry = async (req, res) => {
 // Get symptoms for a patient
 exports.getPatientSymptoms = async (req, res) => {
   try {
-    const { patientId } = req.params;
-    const { startDate, endDate, symptom, minSeverity, limit = 50 } = req.query;
-
-    // Build query
-    const query = { patient: patientId };
-    
-    if (startDate || endDate) {
-      query.startTime = {};
-      if (startDate) query.startTime.$gte = new Date(startDate);
-      if (endDate) query.startTime.$lte = new Date(endDate);
-    }
-    
-    if (symptom) query.symptom = symptom;
-    if (minSeverity) query.severity = { $gte: parseInt(minSeverity) };
-
-    // Execute query
-    const symptoms = await SymptomEntry.find(query)
-      // .populate('recordedBy', 'name role')
-      .sort({ startTime: -1 })
-      .limit(parseInt(limit));
-
-    // Calculate statistics
-    const stats = await calculateSymptomStats(patientId, startDate, endDate);
-
-    res.json({
-      success: true,
-      count: symptoms.length,
-      stats,
-      data: symptoms
-    });
-
+    const { patientId } = req.query;
+    const symptoms = await SymptomEntry.find({ patientId: patientId });
+    res.json(symptoms);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching symptoms',
-      error: error.message
-    });
+    res.status(500).json({ error: error.message });
   }
 };
 

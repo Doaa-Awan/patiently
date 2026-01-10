@@ -5,6 +5,8 @@ const symptomsController = require('../controllers/symptomscontrollers');
 
 router.post('/add', symptomsController.createSymptomEntry);
 
+router.get('/getsymptoms', symptomsController.getPatientSymptoms);
+
 // (ToDO later!!) Apply authentication middleware to all routes below
 // router.use(authenticate);
 
