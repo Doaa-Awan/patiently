@@ -115,4 +115,47 @@ export const api = {
     const response = await apiRequest(url);
     return response.json();
   },
+
+  // OpenRouter AI
+  generateReport: async (entries, timeRange) => {
+    const response = await fetch(`${API_BASE}/api/openrouter`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: `You are a medical assistant helping to create a concise patient symptom summary report for a healthcare provider.
+
+Analyze the following symptom entries and generate a professional, well-structured report that includes:
+
+1. **Onset Date**: When did the patient's issues start? (Identify the earliest symptom date)
+
+2. **Daily Symptom Breakdown**: For each day within the time range, list:
+   - Date
+   - All symptoms reported that day
+   - Severity levels for each symptom
+   - Time of day when symptoms occurred (if available)
+
+3. **Key Patterns & Trends**: 
+   - Most common symptoms
+   - Severity trends (improving, worsening, stable)
+   - Symptom frequency patterns
+   - Any notable correlations
+
+4. **Summary**: A concise overall assessment suitable for a doctor's visit
+
+Symptom Entries Data:
+${JSON.stringify(entries, null, 2)}
+
+Time Range Requested: Last ${timeRange} days
+
+Format the report with clear sections using headers. Be professional, concise, and focus on facts. Make it easy for healthcare providers to quickly understand the patient's symptom timeline and patterns.`
+          }
+        ]
+      }),
+    });
+    return response.json();
+  },
 };
