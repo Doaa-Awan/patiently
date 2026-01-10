@@ -7,11 +7,12 @@ import { Textarea } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Card } from '../components/ui/Card';
 import { VoiceRecorder } from '../components/VoiceRecorder';
+import { useAuth } from '../hooks/useAuth';
+import { api } from '../utils/api';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-export function Dashboard({ userRole }) {
+export function Dashboard() {
+  const { user } = useAuth();
   const [entries, setEntries] = useState([]);
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState(5);
@@ -48,44 +49,45 @@ export function Dashboard({ userRole }) {
       description: apiEntry.symptom,
       severity: apiEntry.severity,
       category: apiEntry.category || 'Other',
-      userRole: userRole || 'patient',
+      userRole: user?.role || 'patient',
       createdAt: apiEntry.startTime ? new Date(apiEntry.startTime).getTime() : apiEntry.createdAt ? new Date(apiEntry.createdAt).getTime() : Date.now(),
     };
   };
 
-  // Fetch or get patient ID
+  // Determine patient ID based on user role and selected patient
   useEffect(() => {
-    const getPatientId = async () => {
-      try {
-        // If we have a selected patient with a valid MongoDB ObjectId, use it
-        if (selectedPatient?.id && /^[0-9a-fA-F]{24}$/.test(selectedPatient.id)) {
-          setPatientId(selectedPatient.id);
-          return;
-        }
+    if (!user) return;
 
-        // Otherwise, try to get the first patient from the database
-        const usersResponse = await fetch(`${API_BASE}/api/users?role=patient&limit=1`);
-        const usersResult = await usersResponse.json();
-        
-        if (usersResult.success && usersResult.data && usersResult.data.length > 0) {
-          setPatientId(usersResult.data[0]._id);
-        } else {
-          // No patients exist - user needs to create one first
-          console.warn('No patients found in database. Please create a patient first.');
-          setPatientId(null);
-        }
-      } catch (error) {
-        console.error('Error fetching patient:', error);
-        setPatientId(null);
+    if (user.role === 'patient') {
+      // Patients use their own ID
+      setPatientId(user._id);
+    } else if (user.role === 'caregiver') {
+      // Caregivers can select a patient
+      if (selectedPatient?.id && /^[0-9a-fA-F]{24}$/.test(selectedPatient.id)) {
+        setPatientId(selectedPatient.id);
+      } else {
+        // If no patient selected, try to get first patient
+        const fetchFirstPatient = async () => {
+          try {
+            const result = await api.getAllUsers('patient');
+            if (result.success && result.data && result.data.length > 0) {
+              setPatientId(result.data[0]._id);
+            } else {
+              setPatientId(null);
+            }
+          } catch (error) {
+            console.error('Error fetching patients:', error);
+            setPatientId(null);
+          }
+        };
+        fetchFirstPatient();
       }
-    };
-
-    getPatientId();
-  }, [selectedPatient]);
+    }
+  }, [user, selectedPatient]);
 
   // Fetch entries from API
   useEffect(() => {
-    if (!patientId) {
+    if (!patientId || !user) {
       setIsLoading(false);
       setEntries([]);
       return;
@@ -94,20 +96,16 @@ export function Dashboard({ userRole }) {
     const fetchEntries = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`${API_BASE}/api/symptoms/getsymptoms?patientId=${patientId}`);
-        const result = await response.json();
+        const result = await api.getPatientSymptoms(patientId);
         
         if (result.success && result.data) {
           const mappedEntries = result.data.map(mapApiEntryToFrontend);
           setEntries(mappedEntries);
-        } else if (Array.isArray(result)) {
-          // Fallback for old API format
-          const mappedEntries = result.map(mapApiEntryToFrontend);
-          setEntries(mappedEntries);
+        } else {
+          setEntries([]);
         }
       } catch (error) {
         console.error('Error fetching entries:', error);
-        // Keep entries as empty array on error
         setEntries([]);
       } finally {
         setIsLoading(false);
@@ -115,39 +113,37 @@ export function Dashboard({ userRole }) {
     };
 
     fetchEntries();
-  }, [patientId, userRole]);
+  }, [patientId, user]);
 
   const handleSave = async () => {
     if (!description.trim()) return;
 
     if (!patientId) {
-      alert('No patient selected. Please select a patient first or create one in the database.');
+      alert('No patient selected. Please select a patient first.');
+      return;
+    }
+
+    if (!user) {
+      alert('You must be logged in to save entries.');
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE}/api/symptoms/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          patient: patientId,
-          symptom: description,
-          severity: severity,
-          category: category,
-          startTime: new Date().toISOString(),
-          notes: description, // Using description as notes for now
-        }),
-      });
+      const symptomData = {
+        symptom: description,
+        severity: severity,
+        category: category,
+        startTime: new Date().toISOString(),
+        notes: description,
+      };
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        console.error('Server error response:', result);
-        alert(`Failed to save entry: ${result.message || result.error || 'Unknown error'}`);
-        return;
+      // Only include patient ID if user is a caregiver
+      if (user.role === 'caregiver') {
+        symptomData.patient = patientId;
       }
+      // If user is a patient, the backend will use their own ID
+
+      const result = await api.createSymptom(symptomData);
 
       if (result.success && result.data) {
         const newEntry = mapApiEntryToFrontend(result.data);
@@ -172,7 +168,7 @@ export function Dashboard({ userRole }) {
   };
 
   const greeting =
-    userRole === 'patient'
+    user?.role === 'patient'
       ? 'How are you feeling today?'
       : 'How are they doing today?';
 

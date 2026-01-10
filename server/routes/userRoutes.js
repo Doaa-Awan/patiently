@@ -1,21 +1,25 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/usercontrollers');
-// const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate, authorize } = require('../middleware/auth');
 
+// Public routes
 // POST /api/users/register - Register new user
-router.post('/register', userController.createUser); // Uses createUser controller
+router.post('/register', userController.createUser);
 
-// GET /api/users - Get all users (with optional role filter)
-router.get('/', userController.getAllUsers);
+// POST /api/users/login - Login user
+router.post('/login', userController.login);
 
-// GET /api/users/:id - Get user by ID
-router.get('/:id', userController.getUserById);
-
-// (ToDO later!!) Apply authentication middleware to all routes below
-// router.use(authenticate);
+// Protected routes - require authentication
+router.use(authenticate);
 
 // GET /api/users/me - Get current user's profile
-// router.get('/me', userController.getCurrentUser);
+router.get('/me', userController.getCurrentUser);
+
+// GET /api/users - Get all users (with optional role filter) - Admin/Caregiver only
+router.get('/', authorize('caregiver'), userController.getAllUsers);
+
+// GET /api/users/:id - Get user by ID - Admin/Caregiver only
+router.get('/:id', authorize('caregiver'), userController.getUserById);
 
 module.exports = router;
