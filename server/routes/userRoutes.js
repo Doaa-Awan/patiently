@@ -7,6 +7,11 @@ const { authenticate, authorize } = require('../middleware/auth');
 // POST /api/users/register - Register new user
 router.post('/register', userController.createUser);
 
+// POST /api/users/addpatient - Add a new patient (by caregiver)
+router.post('/addpatient', userController.createPatient);
+
+// (ToDO later!!) Apply authentication middleware to all routes below
+// router.use(authenticate);
 // POST /api/users/login - Login user
 router.post('/login', userController.login);
 

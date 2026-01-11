@@ -26,6 +26,8 @@ const userSchema = new mongoose.Schema({
   
   // Patient-specific fields
   patientInfo: {
+    firstName: String,
+    lastName: String,
     dateOfBirth: Date,
     conditions: [String],
     medications: [String],
@@ -35,6 +37,11 @@ const userSchema = new mongoose.Schema({
       relationship: String
     }
   },
+
+  assignedPatients: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   
   // TODO: POssible extension for later!!
 //   caregiverInfo: {
