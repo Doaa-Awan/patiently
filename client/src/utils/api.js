@@ -116,6 +116,31 @@ export const api = {
     return response.json();
   },
 
+  // Format voice transcript using AI
+  formatTranscript: async (transcript) => {
+    const response = await fetch(`${API_BASE}/api/openrouter`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: `You are a medical assistant. A patient has recorded their symptoms using voice-to-text. Please format the following transcript into a concise, clear bulleted summary of their symptoms. 
+
+Keep it factual and medical. Use bullet points. Remove filler words, repetitions, and non-medical information. Focus on the actual symptoms, their characteristics, and any relevant details.
+
+Transcript:
+"${transcript}"
+
+Return ONLY the formatted bulleted summary, nothing else.`
+          }
+        ]
+      }),
+    });
+    return response.json();
+  },
+
   // OpenRouter AI
   generateReport: async (entries, timeRange) => {
     const response = await fetch(`${API_BASE}/api/openrouter`, {

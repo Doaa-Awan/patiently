@@ -20,6 +20,7 @@ export function Dashboard() {
   const [inputMode, setInputMode] = useState('voice');
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFormatting, setIsFormatting] = useState(false);
   const [selectedPatient] = useLocalStorage('selected_patient', null);
   const [patientId, setPatientId] = useState(null);
 
@@ -129,12 +130,37 @@ export function Dashboard() {
     }
 
     try {
+      let formattedSymptom = description;
+      const originalTranscript = description;
+
+      // If voice input, format the transcript using AI
+      if (inputMode === 'voice' && description.trim()) {
+        try {
+          setIsFormatting(true);
+          const aiResponse = await api.formatTranscript(description);
+          
+          if (aiResponse.choices && aiResponse.choices[0] && aiResponse.choices[0].message) {
+            formattedSymptom = aiResponse.choices[0].message.content.trim();
+            // Update the description field to show the formatted version
+            setDescription(formattedSymptom);
+          } else if (aiResponse.error) {
+            console.warn('AI formatting failed, using original transcript:', aiResponse.error);
+            // Continue with original transcript if AI fails
+          }
+        } catch (error) {
+          console.error('Error formatting transcript with AI:', error);
+          // Continue with original transcript if AI fails
+        } finally {
+          setIsFormatting(false);
+        }
+      }
+
       const symptomData = {
-        symptom: description,
+        symptom: formattedSymptom,
         severity: severity,
         category: category,
         startTime: new Date().toISOString(),
-        notes: description,
+        notes: inputMode === 'voice' ? `Original transcript: ${originalTranscript}` : formattedSymptom,
       };
 
       // Only include patient ID if user is a caregiver
@@ -262,9 +288,14 @@ export function Dashboard() {
             onClick={handleSave}
             className="w-full"
             size="lg"
-            disabled={!description.trim()}
+            disabled={!description.trim() || isFormatting}
+            isLoading={isFormatting}
           >
-            {isSaved ? 'Entry Saved!' : 'Save Entry'}
+            {isFormatting 
+              ? 'Formatting with AI...' 
+              : isSaved 
+                ? 'Entry Saved!' 
+                : 'Save Entry'}
           </Button>
         </div>
       </Card>
