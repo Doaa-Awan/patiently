@@ -1,23 +1,76 @@
 const SymptomEntry = require('../models/symptoms');
+const mongoose = require('mongoose');
+const User = require('../models/users');
 
 exports.createSymptomEntry = async (req, res) => {
   try {
-    const { patient, symptom, severity, startTime, notes } = req.body;
-    // const recordedBy = req.user.id;
+    const { patient, symptom, severity, startTime, notes, category } = req.body;
+    const currentUser = req.user;
+    const currentUserId = req.userId.toString();
 
     // Basic validation
-    if (!patient || !symptom || !severity || !startTime) {
+    if (!symptom || !severity || !startTime) {
       return res.status(400).json({
         success: false,
-        message: 'Patient, symptom, severity, and start time are required'
+        message: 'Symptom, severity, and start time are required'
+      });
+    }
+
+    // Determine patient ID
+    let patientId;
+    if (patient) {
+      // If patient ID is provided, validate it
+      if (!mongoose.Types.ObjectId.isValid(patient)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid patient ID format. Patient ID must be a valid MongoDB ObjectId.',
+          error: `Received: ${patient}`
+        });
+      }
+      patientId = patient;
+    } else {
+      // If no patient ID provided, use current user's ID (if they're a patient)
+      if (currentUser.role !== 'patient') {
+        return res.status(400).json({
+          success: false,
+          message: 'Patient ID is required for caregivers'
+        });
+      }
+      patientId = currentUserId;
+    }
+
+    // Authorization: Patients can only create entries for themselves
+    if (currentUser.role === 'patient' && patientId !== currentUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Patients can only create symptom entries for themselves'
+      });
+    }
+
+    // Check if patient exists
+    const patientExists = await User.findById(patientId);
+    if (!patientExists) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found. Please ensure the patient exists in the database.',
+        error: `Patient with ID ${patientId} does not exist`
+      });
+    }
+
+    // Ensure the patient is actually a patient
+    if (patientExists.role !== 'patient') {
+      return res.status(400).json({
+        success: false,
+        message: 'Symptom entries can only be created for patients'
       });
     }
 
     const symptomEntry = await SymptomEntry.create({
-      patient, 
+      patient: patientId, 
       symptom,
+      category: category || 'Other',
       severity,
-      startedTime: new Date(startTime),
+      startTime: new Date(startTime),
       notes
     });
 
@@ -45,10 +98,68 @@ exports.createSymptomEntry = async (req, res) => {
 exports.getPatientSymptoms = async (req, res) => {
   try {
     const { patientId } = req.query;
-    const symptoms = await SymptomEntry.find({ patientId: patientId });
-    res.json(symptoms);
+    const currentUser = req.user;
+    const currentUserId = req.userId.toString();
+    
+    // Determine which patient's symptoms to fetch
+    let targetPatientId;
+    if (patientId) {
+      // If patient ID is provided, validate it
+      if (!mongoose.Types.ObjectId.isValid(patientId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid patient ID format'
+        });
+      }
+      targetPatientId = patientId;
+    } else {
+      // If no patient ID provided, use current user's ID (if they're a patient)
+      if (currentUser.role !== 'patient') {
+        return res.status(400).json({
+          success: false,
+          message: 'Patient ID is required for caregivers'
+        });
+      }
+      targetPatientId = currentUserId;
+    }
+
+    // Authorization: Patients can only view their own symptoms
+    if (currentUser.role === 'patient' && targetPatientId !== currentUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Patients can only view their own symptoms'
+      });
+    }
+
+    // Verify the target is actually a patient
+    const targetPatient = await User.findById(targetPatientId);
+    if (!targetPatient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Patient not found'
+      });
+    }
+
+    if (targetPatient.role !== 'patient') {
+      return res.status(400).json({
+        success: false,
+        message: 'Can only fetch symptoms for patients'
+      });
+    }
+
+    const symptoms = await SymptomEntry.find({ patient: targetPatientId })
+      .populate('patient', 'name email role')
+      .sort({ startTime: -1 });
+    
+    res.json({
+      success: true,
+      data: symptoms
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 };
 
