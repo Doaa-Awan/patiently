@@ -235,15 +235,17 @@ export function Dashboard() {
             </p>
           </div>
           {user?.role === 'caregiver' && hasPatients && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate('/patients')}
-              leftIcon={<Users className="w-4 h-4" />}
-              className="ml-4"
-            >
-              View Patients
-            </Button>
+            <div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate('/patients')}
+                leftIcon={<Users className="w-4 h-4" />}
+                className="ml-4"
+              >
+                All Patients
+              </Button>
+            </div>
           )}
         </div>
         {user?.role === 'caregiver' && selectedPatient && (
