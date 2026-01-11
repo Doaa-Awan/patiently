@@ -319,7 +319,7 @@ export function Dashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
           <Select
-            label="Category"
+            label="Main Symptom"
             options={categories}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -355,7 +355,7 @@ export function Dashboard() {
           <h2 className="text-lg font-semibold text-stone-900">
             Recent Entries
           </h2>
-          <span className="text-sm text-emerald-600 font-medium cursor-pointer">
+          <span className="text-sm text-emerald-600 font-medium cursor-pointer" onClick={() => navigate('/timeline')}>
             View all
           </span>
         </div>
