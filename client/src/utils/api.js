@@ -176,7 +176,14 @@ ${JSON.stringify(entries, null, 2)}
 
 Time Range Requested: Last ${timeRange} days
 
-Format the report with clear sections using headers. Be professional, concise, and focus on facts. Make it easy for healthcare providers to quickly understand the patient's symptom timeline and patterns.`
+Format the report with clear sections using markdown headers (## for main sections, ### for subsections). Use bullet points (-) for lists. Use **bold** for emphasis on important information. Be professional, concise, and focus on facts. Make it easy for healthcare providers to quickly understand the patient's symptom timeline and patterns.
+
+Return the report formatted in markdown with proper structure:
+- Use ## for main section headers
+- Use ### for subsection headers  
+- Use bullet points (-) for lists
+- Use **bold** for key information
+- Separate sections with blank lines`
           }
         ]
       }),

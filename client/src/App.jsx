@@ -48,7 +48,7 @@ function Layout({ children }) {
           <div className="flex items-center justify-between md:hidden mb-4">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-emerald-600 rounded-lg mr-3" />
-              <span className="text-lg font-bold text-stone-900">HealthJournal</span>
+              <span className="text-lg font-bold text-stone-900">Patiently</span>
             </div>
             <div className="flex items-center gap-4">
               {user && (
@@ -73,7 +73,7 @@ function Layout({ children }) {
             <div className="flex items-center">
               <div className="w-8 h-8 bg-emerald-600 rounded-lg mr-3" />
               <span className="text-xl font-bold text-stone-900">
-                HealthJournal
+                Patiently
               </span>
             </div>
             <div className="flex items-center gap-4">

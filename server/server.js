@@ -53,7 +53,7 @@ const openRouter = new OpenRouter({
   apiKey: OPENROUTER_KEY,
   defaultHeaders: {
     'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
-    'X-Title': process.env.SITE_TITLE || 'HealthJournal',
+    'X-Title': process.env.SITE_TITLE || 'Patiently',
   },
 });
 
