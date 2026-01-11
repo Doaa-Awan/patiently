@@ -3,18 +3,12 @@ import { motion } from 'framer-motion';
 import { User, Heart } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 
-export function RoleSelection({ onSelect }) {
+export function RoleSelection() {
   const navigate = useNavigate();
 
   const handleSelect = (role) => {
-    // Set the role first, then navigate. Deferring navigation avoids a race with ProtectedRoute.
-    onSelect(role);
-
-    if (role === 'caregiver') {
-      setTimeout(() => navigate('/patients'), 0);
-    } else {
-      navigate('/dashboard');
-    }
+    // Navigate to login with role context, or directly to register
+    navigate('/login');
   }; 
 
   return (
