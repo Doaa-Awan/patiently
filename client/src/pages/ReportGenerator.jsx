@@ -8,6 +8,98 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Select } from '../components/ui/Select';
 
+// Format markdown-like text to HTML
+const formatReportText = (text) => {
+  if (!text) return '';
+
+  // Split into lines for processing
+  const lines = text.split('\n');
+  const output = [];
+  let inBulletList = false;
+  let inNumberedList = false;
+  let bulletItems = [];
+  let numberedItems = [];
+
+  const closeBulletList = () => {
+    if (bulletItems.length > 0) {
+      output.push(`<ul class="list-disc list-inside space-y-1 my-3 ml-4">${bulletItems.join('')}</ul>`);
+      bulletItems = [];
+      inBulletList = false;
+    }
+  };
+
+  const closeNumberedList = () => {
+    if (numberedItems.length > 0) {
+      output.push(`<ol class="list-decimal list-inside space-y-1 my-3 ml-4">${numberedItems.join('')}</ol>`);
+      numberedItems = [];
+      inNumberedList = false;
+    }
+  };
+
+  const closeAllLists = () => {
+    closeBulletList();
+    closeNumberedList();
+  };
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+
+    // Headers
+    if (trimmed.startsWith('### ')) {
+      closeAllLists();
+      output.push(`<h3 class="text-lg font-semibold text-stone-900 mt-6 mb-3">${formatInlineMarkdown(trimmed.substring(4))}</h3>`);
+    } else if (trimmed.startsWith('## ')) {
+      closeAllLists();
+      output.push(`<h2 class="text-xl font-bold text-stone-900 mt-6 mb-3">${formatInlineMarkdown(trimmed.substring(3))}</h2>`);
+    } else if (trimmed.startsWith('# ')) {
+      closeAllLists();
+      output.push(`<h1 class="text-2xl font-bold text-stone-900 mt-6 mb-4">${formatInlineMarkdown(trimmed.substring(2))}</h1>`);
+    }
+    // Bullet points
+    else if (/^[\*\-\•]\s+/.test(trimmed)) {
+      closeNumberedList();
+      if (!inBulletList) {
+        inBulletList = true;
+      }
+      const content = trimmed.replace(/^[\*\-\•]\s+/, '');
+      bulletItems.push(`<li class="mb-1">${formatInlineMarkdown(content)}</li>`);
+    }
+    // Numbered lists
+    else if (/^\d+\.\s+/.test(trimmed)) {
+      closeBulletList();
+      if (!inNumberedList) {
+        inNumberedList = true;
+      }
+      const content = trimmed.replace(/^\d+\.\s+/, '');
+      numberedItems.push(`<li class="mb-1">${formatInlineMarkdown(content)}</li>`);
+    }
+    // Empty line
+    else if (trimmed === '') {
+      closeAllLists();
+    }
+    // Regular paragraph
+    else {
+      closeAllLists();
+      output.push(`<p class="mb-3 leading-relaxed">${formatInlineMarkdown(trimmed)}</p>`);
+    }
+  });
+
+  closeAllLists();
+
+  return output.join('');
+};
+
+// Format inline markdown (bold, etc.)
+const formatInlineMarkdown = (text) => {
+  // Convert bold text
+  let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-stone-900">$1</strong>');
+  
+  // Convert italic text
+  formatted = formatted.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
+  
+  return formatted;
+};
+
 export function ReportGenerator() {
   const { user } = useAuth();
   const [entries, setEntries] = useState([]);
@@ -251,9 +343,10 @@ export function ReportGenerator() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm font-mono text-sm leading-relaxed whitespace-pre-wrap text-stone-700">
-            {report}
-          </div>
+          <div 
+            className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm text-base leading-relaxed text-stone-700"
+            dangerouslySetInnerHTML={{ __html: formatReportText(report) }}
+          />
         </div>
       )}
     </div>
