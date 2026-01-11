@@ -45,7 +45,7 @@ JWT_SECRET=your-secret-key-change-in-production
 VITE_PORT=5000
 OPENROUTER_API_KEY=your_openrouter_api_key (optional)
 SITE_URL=http://localhost:5173
-SITE_TITLE=HealthJournal
+SITE_TITLE=Patiently
 ```
 
 4. Seed the database with sample data:
