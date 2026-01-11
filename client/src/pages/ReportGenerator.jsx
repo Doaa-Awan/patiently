@@ -42,19 +42,39 @@ const formatReportText = (text) => {
   };
 
   lines.forEach((line) => {
-    const trimmed = line.trim();
+  const trimmed = line.trim();
 
-    // Headers
-    if (trimmed.startsWith('### ')) {
-      closeAllLists();
-      output.push(`<h3 class="text-lg font-semibold text-stone-900 mt-6 mb-3">${formatInlineMarkdown(trimmed.substring(4))}</h3>`);
-    } else if (trimmed.startsWith('## ')) {
-      closeAllLists();
-      output.push(`<h2 class="text-xl font-bold text-stone-900 mt-6 mb-3">${formatInlineMarkdown(trimmed.substring(3))}</h2>`);
-    } else if (trimmed.startsWith('# ')) {
-      closeAllLists();
-      output.push(`<h1 class="text-2xl font-bold text-stone-900 mt-6 mb-4">${formatInlineMarkdown(trimmed.substring(2))}</h1>`);
-    }
+  // Headers
+  if (trimmed.startsWith('#### ')) {
+    closeAllLists();
+    output.push(
+      `<h4 class="text-base font-semibold text-stone-900 mt-4 mb-2">
+        ${formatInlineMarkdown(trimmed.substring(5))}
+      </h4>`
+    );
+  } else if (trimmed.startsWith('### ')) {
+    closeAllLists();
+    output.push(
+      `<h3 class="text-lg font-semibold text-stone-900 mt-6 mb-3">
+        ${formatInlineMarkdown(trimmed.substring(4))}
+      </h3>`
+    );
+  } else if (trimmed.startsWith('## ')) {
+    closeAllLists();
+    output.push(
+      `<h2 class="text-xl font-bold text-stone-900 mt-6 mb-3">
+        ${formatInlineMarkdown(trimmed.substring(3))}
+      </h2>`
+    );
+  } else if (trimmed.startsWith('# ')) {
+    closeAllLists();
+    output.push(
+      `<h1 class="text-2xl font-bold text-stone-900 mt-6 mb-4">
+        ${formatInlineMarkdown(trimmed.substring(2))}
+      </h1>`
+    );
+  }
+
     // Bullet points
     else if (/^[\*\-\•]\s+/.test(trimmed)) {
       closeNumberedList();
