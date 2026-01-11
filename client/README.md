@@ -1,16 +1,64 @@
-# React + Vite
+# Patiently 🩺  
+An app that turns daily symptoms into a clear, shareable health timeline so patients and caregivers can communicate more accurately with healthcare providers.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Why this exists
+Patients often forget details, downplay symptoms, or struggle to describe what’s happening (especially with chronic illness, cognitive challenges, or high-stress appointments). **Patiently** helps capture symptoms as they happen and organizes them into a timeline that’s easy to review and share.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Key Features
+### 👤 Two modes: Patient & Caregiver
+- **Patient mode:** track symptoms for yourself
+- **Caregiver mode:** manage symptom tracking for multiple patients (useful for children, seniors, dementia care, etc.)
 
-## React Compiler
+### 🗓️ Symptom Timeline Builder
+- Log symptoms with **date/time, severity, category, and notes**
+- View entries grouped by day or as a timeline for quick pattern recognition
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🤖 AI Summary for Report Generation
+Patiently can generate an **AI-written summary** based on logged symptoms to help users prepare for appointments.
 
-## Expanding the ESLint configuration
+**What the AI summary includes (example outputs):**
+- Overall symptom trend (improving / worsening / fluctuating)
+- Most frequent symptoms + typical severity range
+- Notable changes over time (e.g., spikes, recurring patterns)
+- A clean “appointment-ready” narrative
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+> ⚠️ Note: This feature is **not medical advice** and does not diagnose. It’s designed to improve symptom communication.
+
+### 📄 Shareable Report (Optional / Demo-friendly)
+- Export a printable or shareable report (e.g., PDF or formatted summary) for a clinic visit or caregiver handoff.
+
+---
+
+## Tech Stack (example)
+- **Client:** React + Vite
+- **Server:** Node.js + Express
+- **Database/Auth:** MongoDB, JWT
+- **AI summary:** OpenRouter (gpt-4o-mini)
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js (v18+ recommended)
+- npm
+
+## Environment Variables & Local Setup
+
+### Client (`client/.env`)
+```env
+VITE_API_URL=http://localhost:8080
+
+### Server (`server/.env`)
+```env
+OPENROUTER_API_KEY=your_openrouter_api_key
+MONGODB_URI=your_mongodb_connection_string
+VITE_API_URL=http://localhost:5173
+VITE_PORT=8080
+
+### 1) Clone the repo
+### 2) Update the .env files in client and server
+### 3) Run 'npm i' from the terminal in the client and server folders
+### 4) Run 'npm run dev' in the client and server folders
