@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Mic, Keyboard } from 'lucide-react';
+import { Mic, Keyboard, ArrowLeft, Users } from 'lucide-react';
 
 import { Button } from '../components/ui/Button';
 import { Textarea } from '../components/ui/Input';
@@ -13,6 +14,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 
 export function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [entries, setEntries] = useState([]);
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState(5);
@@ -23,6 +25,7 @@ export function Dashboard() {
   const [isFormatting, setIsFormatting] = useState(false);
   const [selectedPatient] = useLocalStorage('selected_patient', null);
   const [patientId, setPatientId] = useState(null);
+  const [hasPatients, setHasPatients] = useState(false);
 
   const categories = [
     { value: 'Pain', label: 'Pain' },
@@ -54,6 +57,27 @@ export function Dashboard() {
       createdAt: apiEntry.startTime ? new Date(apiEntry.startTime).getTime() : apiEntry.createdAt ? new Date(apiEntry.createdAt).getTime() : Date.now(),
     };
   };
+
+  // Check if caregiver has patients available
+  useEffect(() => {
+    const checkPatients = async () => {
+      if (user?.role === 'caregiver') {
+        try {
+          const result = await api.getAllUsers('patient');
+          if (result.success && result.data && result.data.length > 0) {
+            setHasPatients(true);
+          } else {
+            setHasPatients(false);
+          }
+        } catch (error) {
+          console.error('Error checking patients:', error);
+          setHasPatients(false);
+        }
+      }
+    };
+
+    checkPatients();
+  }, [user]);
 
   // Determine patient ID based on user role and selected patient
   useEffect(() => {
@@ -201,12 +225,38 @@ export function Dashboard() {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-stone-900 mb-2">
-          {greeting}
-        </h1>
-        <p className="text-stone-500">
-          {format(new Date(), 'EEEE, MMMM do, yyyy')}
-        </p>
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-stone-900 mb-2">
+              {greeting}
+            </h1>
+            <p className="text-stone-500">
+              {format(new Date(), 'EEEE, MMMM do, yyyy')}
+            </p>
+          </div>
+          {user?.role === 'caregiver' && hasPatients && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate('/patients')}
+              leftIcon={<Users className="w-4 h-4" />}
+              className="ml-4"
+            >
+              View Patients
+            </Button>
+          )}
+        </div>
+        {user?.role === 'caregiver' && selectedPatient && (
+          <div className="mt-2 flex items-center gap-2">
+            <ArrowLeft 
+              className="w-4 h-4 text-stone-400 cursor-pointer hover:text-stone-600"
+              onClick={() => navigate('/patients')}
+            />
+            <span className="text-sm text-stone-600">
+              Recording for: <span className="font-medium text-stone-900">{selectedPatient.name}</span>
+            </span>
+          </div>
+        )}
       </header>
 
       <Card className="overflow-hidden">
@@ -269,7 +319,7 @@ export function Dashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
           <Select
-            label="Category"
+            label="Main Symptom"
             options={categories}
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -305,7 +355,7 @@ export function Dashboard() {
           <h2 className="text-lg font-semibold text-stone-900">
             Recent Entries
           </h2>
-          <span className="text-sm text-emerald-600 font-medium cursor-pointer">
+          <span className="text-sm text-emerald-600 font-medium cursor-pointer" onClick={() => navigate('/timeline')}>
             View all
           </span>
         </div>

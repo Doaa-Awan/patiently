@@ -82,7 +82,7 @@ export function Register() {
             <h1 className="text-3xl font-bold text-stone-900 mb-2">
               Create Account
             </h1>
-            <p className="text-stone-600">Sign up for HealthJournal</p>
+            <p className="text-stone-600">Sign up for Patiently</p>
           </div>
 
           {error && (
