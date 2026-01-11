@@ -55,7 +55,7 @@ function Layout({ children }) {
                 <span className="text-sm text-stone-600">{user.name}</span>
               )}
               <button
-                className="text-sm text-stone-500 hover:text-stone-900"
+                className="text-sm font-medium text-red-600 bg-red-50 hover:bg-red-600 hover:text-white px-3 py-1 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-200"
                 onClick={handleLogout}
               >
                 Logout
@@ -81,7 +81,7 @@ function Layout({ children }) {
                 <span className="text-sm text-stone-600">{user.name}</span>
               )}
               <button
-                className="text-sm text-stone-500 hover:text-stone-900"
+                className="text-sm font-medium text-red-600 bg-red-50 hover:bg-red-600 hover:text-white px-3 py-1 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-200"
                 onClick={handleLogout}
               >
                 Logout
