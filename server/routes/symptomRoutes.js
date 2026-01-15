@@ -14,4 +14,10 @@ router.post('/add', symptomsController.createSymptomEntry);
 // Patients can only view their own symptoms, caregivers can view any patient's symptoms
 router.get('/getsymptoms', symptomsController.getPatientSymptoms);
 
+// PUT /api/symptoms/:id - Update a symptom entry
+router.put('/:id', symptomsController.updateSymptomEntry);
+
+// DELETE /api/symptoms/:id - Delete a symptom entry
+router.delete('/:id', symptomsController.deleteSymptomEntry);
+
 module.exports = router;

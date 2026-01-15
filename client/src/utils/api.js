@@ -115,6 +115,19 @@ export const api = {
     const response = await apiRequest(url);
     return response.json();
   },
+  updateSymptom: async (symptomId, updates) => {
+    const response = await apiRequest(`/api/symptoms/${symptomId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    return response.json();
+  },
+  deleteSymptom: async (symptomId) => {
+    const response = await apiRequest(`/api/symptoms/${symptomId}`, {
+      method: 'DELETE',
+    });
+    return response.json();
+  },
 
   // Format voice transcript using AI
   formatTranscript: async (transcript) => {

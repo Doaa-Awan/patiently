@@ -27,6 +27,12 @@ export function Dashboard() {
   const [patientId, setPatientId] = useState(null);
   const [hasPatients, setHasPatients] = useState(false);
   const [expandedEntries, setExpandedEntries] = useState({});
+  const [editingEntryId, setEditingEntryId] = useState(null);
+  const [editDescription, setEditDescription] = useState('');
+  const [editSeverity, setEditSeverity] = useState(5);
+  const [editCategory, setEditCategory] = useState('Other');
+  const [isUpdatingEntry, setIsUpdatingEntry] = useState(false);
+  const [isDeletingEntry, setIsDeletingEntry] = useState(false);
 
   const categories = [
     { value: 'Pain', label: 'Pain' },
@@ -243,6 +249,72 @@ export function Dashboard() {
     }));
   };
 
+  const startEditingEntry = (entry) => {
+    setEditingEntryId(entry.id);
+    setEditDescription(entry.description);
+    setEditSeverity(entry.severity);
+    setEditCategory(entry.category);
+  };
+
+  const cancelEditingEntry = () => {
+    setEditingEntryId(null);
+    setEditDescription('');
+    setEditSeverity(5);
+    setEditCategory('Other');
+  };
+
+  const handleUpdateEntry = async (entryId) => {
+    if (!editDescription.trim()) {
+      alert('Description cannot be empty.');
+      return;
+    }
+
+    try {
+      setIsUpdatingEntry(true);
+      const result = await api.updateSymptom(entryId, {
+        symptom: editDescription.trim(),
+        severity: editSeverity,
+        category: editCategory,
+      });
+
+      if (result.success && result.data) {
+        const updatedEntry = mapApiEntryToFrontend(result.data);
+        setEntries((prev) =>
+          prev.map((entry) => (entry.id === entryId ? updatedEntry : entry))
+        );
+        cancelEditingEntry();
+      } else {
+        alert(result.message || 'Failed to update entry.');
+      }
+    } catch (error) {
+      alert(error.message || 'Failed to update entry.');
+    } finally {
+      setIsUpdatingEntry(false);
+    }
+  };
+
+  const handleDeleteEntry = async (entryId) => {
+    const shouldDelete = window.confirm('Delete this entry? This cannot be undone.');
+    if (!shouldDelete) return;
+
+    try {
+      setIsDeletingEntry(true);
+      const result = await api.deleteSymptom(entryId);
+      if (result.success) {
+        setEntries((prev) => prev.filter((entry) => entry.id !== entryId));
+        if (editingEntryId === entryId) {
+          cancelEditingEntry();
+        }
+      } else {
+        alert(result.message || 'Failed to delete entry.');
+      }
+    } catch (error) {
+      alert(error.message || 'Failed to delete entry.');
+    } finally {
+      setIsDeletingEntry(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <header className="mb-8">
@@ -399,6 +471,7 @@ export function Dashboard() {
               const isExpanded = Boolean(expandedEntries[entry.id]);
               const shouldShowToggle =
                 entry.description && entry.description.length > 120;
+              const isEditing = editingEntryId === entry.id;
 
               return (
                 <div
@@ -406,24 +479,50 @@ export function Dashboard() {
                   className="bg-white p-4 rounded-lg border border-stone-100 shadow-sm flex justify-between items-start text-left gap-4"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-stone-900">
-                      {entry.category}
-                    </p>
-                    <p
-                      className={`text-sm text-stone-500 whitespace-pre-wrap break-words overflow-hidden transition-[max-height] duration-200 ${
-                        isExpanded ? 'max-h-none' : 'max-h-10'
-                      }`}
-                    >
-                      {entry.description}
-                    </p>
-                    {shouldShowToggle && (
-                      <button
-                        type="button"
-                        className="mt-2 text-xs font-medium text-emerald-600 hover:text-emerald-700"
-                        onClick={() => toggleEntryExpansion(entry.id)}
-                      >
-                        {isExpanded ? 'Show less' : 'Show more'}
-                      </button>
+                  <p className="font-medium text-stone-900">
+                    {isEditing ? editCategory : entry.category}
+                  </p>
+                    {isEditing ? (
+                      <div className="mt-3 space-y-3">
+                        <Textarea
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          className="min-h-[90px]"
+                        />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <Select
+                            label="Category"
+                            options={categories}
+                            value={editCategory}
+                            onChange={(e) => setEditCategory(e.target.value)}
+                          />
+                          <Select
+                            label="Severity"
+                            options={severityOptions}
+                            value={editSeverity}
+                            onChange={(e) => setEditSeverity(Number(e.target.value))}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p
+                          className={`text-sm text-stone-500 whitespace-pre-wrap break-words overflow-hidden transition-[max-height] duration-200 ${
+                            isExpanded ? 'max-h-none' : 'max-h-10'
+                          }`}
+                        >
+                          {entry.description}
+                        </p>
+                        {shouldShowToggle && (
+                          <button
+                            type="button"
+                            className="mt-2 text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                            onClick={() => toggleEntryExpansion(entry.id)}
+                          >
+                            {isExpanded ? 'Show less' : 'Show more'}
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -432,8 +531,47 @@ export function Dashboard() {
                       {format(new Date(entry.createdAt), 'h:mm a')}
                     </span>
                     <span className="inline-block px-2 py-0.5 bg-stone-100 text-stone-600 rounded text-xs mt-1">
-                      Sev: {entry.severity}
+                      Sev: {isEditing ? editSeverity : entry.severity}
                     </span>
+                    <div className="mt-3 flex flex-col gap-2 items-end">
+                      {isEditing ? (
+                        <>
+                          <button
+                            type="button"
+                            className="text-xs font-medium text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
+                            onClick={() => handleUpdateEntry(entry.id)}
+                            disabled={isUpdatingEntry}
+                          >
+                            {isUpdatingEntry ? 'Saving...' : 'Save'}
+                          </button>
+                          <button
+                            type="button"
+                            className="text-xs font-medium text-stone-500 hover:text-stone-700"
+                            onClick={cancelEditingEntry}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="text-xs font-medium text-stone-600 hover:text-stone-800"
+                            onClick={() => startEditingEntry(entry)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="text-xs font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                            onClick={() => handleDeleteEntry(entry.id)}
+                            disabled={isDeletingEntry}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

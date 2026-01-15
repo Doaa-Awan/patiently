@@ -10,6 +10,8 @@ export function Timeline() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPatient] = useLocalStorage('selected_patient', null);
   const [patientId, setPatientId] = useState(null);
+  const [isUpdatingEntry, setIsUpdatingEntry] = useState(false);
+  const [isDeletingEntry, setIsDeletingEntry] = useState(false);
 
   // Map API response to frontend format
   const mapApiEntryToFrontend = (apiEntry) => {
@@ -90,6 +92,44 @@ export function Timeline() {
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
+  const handleUpdateEntry = async (entryId, updates) => {
+    try {
+      setIsUpdatingEntry(true);
+      const result = await api.updateSymptom(entryId, updates);
+      if (result.success && result.data) {
+        const updatedEntry = mapApiEntryToFrontend(result.data);
+        setEntries((prev) =>
+          prev.map((entry) => (entry.id === entryId ? updatedEntry : entry))
+        );
+      } else {
+        alert(result.message || 'Failed to update entry.');
+      }
+    } catch (error) {
+      alert(error.message || 'Failed to update entry.');
+    } finally {
+      setIsUpdatingEntry(false);
+    }
+  };
+
+  const handleDeleteEntry = async (entryId) => {
+    const shouldDelete = window.confirm('Delete this entry? This cannot be undone.');
+    if (!shouldDelete) return;
+
+    try {
+      setIsDeletingEntry(true);
+      const result = await api.deleteSymptom(entryId);
+      if (result.success) {
+        setEntries((prev) => prev.filter((entry) => entry.id !== entryId));
+      } else {
+        alert(result.message || 'Failed to delete entry.');
+      }
+    } catch (error) {
+      alert(error.message || 'Failed to delete entry.');
+    } finally {
+      setIsDeletingEntry(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto pb-20">
       <header className="mb-8">
@@ -108,7 +148,15 @@ export function Timeline() {
       ) : (
         <div className="space-y-4">
           {sorted.map((entry, i) => (
-            <TimelineEntry key={entry.id} entry={entry} index={i} />
+            <TimelineEntry
+              key={entry.id}
+              entry={entry}
+              index={i}
+              onUpdateEntry={handleUpdateEntry}
+              onDeleteEntry={handleDeleteEntry}
+              isUpdatingEntry={isUpdatingEntry}
+              isDeletingEntry={isDeletingEntry}
+            />
           ))}
         </div>
       )}

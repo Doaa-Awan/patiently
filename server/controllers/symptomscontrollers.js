@@ -163,6 +163,115 @@ exports.getPatientSymptoms = async (req, res) => {
   }
 };
 
+// Update a symptom entry
+exports.updateSymptomEntry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUser = req.user;
+    const currentUserId = req.userId.toString();
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid symptom entry ID format'
+      });
+    }
+
+    const entry = await SymptomEntry.findById(id);
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        message: 'Symptom entry not found'
+      });
+    }
+
+    if (currentUser.role === 'patient' && entry.patient.toString() !== currentUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Patients can only update their own symptom entries'
+      });
+    }
+
+    const { symptom, severity, startTime, notes, category } = req.body || {};
+    const updates = {};
+
+    if (symptom !== undefined) updates.symptom = symptom;
+    if (severity !== undefined) updates.severity = severity;
+    if (category !== undefined) updates.category = category;
+    if (notes !== undefined) updates.notes = notes;
+    if (startTime !== undefined) updates.startTime = new Date(startTime);
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No valid fields provided for update'
+      });
+    }
+
+    const updatedEntry = await SymptomEntry.findByIdAndUpdate(
+      id,
+      updates,
+      { new: true, runValidators: true }
+    ).populate('patient', 'name email role');
+
+    return res.json({
+      success: true,
+      message: 'Symptom entry updated',
+      data: updatedEntry
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error updating symptom entry',
+      error: error.message
+    });
+  }
+};
+
+// Delete a symptom entry
+exports.deleteSymptomEntry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const currentUser = req.user;
+    const currentUserId = req.userId.toString();
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid symptom entry ID format'
+      });
+    }
+
+    const entry = await SymptomEntry.findById(id);
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        message: 'Symptom entry not found'
+      });
+    }
+
+    if (currentUser.role === 'patient' && entry.patient.toString() !== currentUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Patients can only delete their own symptom entries'
+      });
+    }
+
+    await SymptomEntry.findByIdAndDelete(id);
+
+    return res.json({
+      success: true,
+      message: 'Symptom entry deleted'
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error deleting symptom entry',
+      error: error.message
+    });
+  }
+};
+
 // Get symptom trends
 exports.getSymptomTrends = async (req, res) => {
   try {
