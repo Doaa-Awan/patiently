@@ -26,6 +26,7 @@ export function Dashboard() {
   const [selectedPatient] = useLocalStorage('selected_patient', null);
   const [patientId, setPatientId] = useState(null);
   const [hasPatients, setHasPatients] = useState(false);
+  const [expandedEntries, setExpandedEntries] = useState({});
 
   const categories = [
     { value: 'Pain', label: 'Pain' },
@@ -235,6 +236,13 @@ export function Dashboard() {
       ? 'How are you feeling today?'
       : 'How are they doing today?';
 
+  const toggleEntryExpansion = (entryId) => {
+    setExpandedEntries((prev) => ({
+      ...prev,
+      [entryId]: !prev[entryId],
+    }));
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <header className="mb-8">
@@ -387,30 +395,49 @@ export function Dashboard() {
           </div>
         ) : (
           <div className="space-y-3">
-            {entries.slice(0, 3).map((entry) => (
-              <div
-                key={entry.id}
-                className="bg-white p-4 rounded-lg border border-stone-100 shadow-sm flex justify-between items-center"
-              >
-                <div>
-                  <p className="font-medium text-stone-900">
-                    {entry.category}
-                  </p>
-                  <p className="text-sm text-stone-500 truncate max-w-[200px]">
-                    {entry.description}
-                  </p>
-                </div>
+            {entries.slice(0, 3).map((entry) => {
+              const isExpanded = Boolean(expandedEntries[entry.id]);
+              const shouldShowToggle =
+                entry.description && entry.description.length > 120;
 
-                <div className="text-right">
-                  <span className="text-xs text-stone-400 block">
-                    {format(new Date(entry.createdAt), 'h:mm a')}
-                  </span>
-                  <span className="inline-block px-2 py-0.5 bg-stone-100 text-stone-600 rounded text-xs mt-1">
-                    Sev: {entry.severity}
-                  </span>
+              return (
+                <div
+                  key={entry.id}
+                  className="bg-white p-4 rounded-lg border border-stone-100 shadow-sm flex justify-between items-start text-left gap-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-stone-900">
+                      {entry.category}
+                    </p>
+                    <p
+                      className={`text-sm text-stone-500 whitespace-pre-wrap break-words overflow-hidden transition-[max-height] duration-200 ${
+                        isExpanded ? 'max-h-none' : 'max-h-10'
+                      }`}
+                    >
+                      {entry.description}
+                    </p>
+                    {shouldShowToggle && (
+                      <button
+                        type="button"
+                        className="mt-2 text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                        onClick={() => toggleEntryExpansion(entry.id)}
+                      >
+                        {isExpanded ? 'Show less' : 'Show more'}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className="text-xs text-stone-400 block">
+                      {format(new Date(entry.createdAt), 'h:mm a')}
+                    </span>
+                    <span className="inline-block px-2 py-0.5 bg-stone-100 text-stone-600 rounded text-xs mt-1">
+                      Sev: {entry.severity}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
