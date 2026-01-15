@@ -126,14 +126,25 @@ export const api = {
         messages: [
           {
             role: 'user',
-            content: `You are a medical assistant. A patient has recorded their symptoms using voice-to-text. Please format the following transcript into a concise, clear bulleted summary of their symptoms. 
+            content: `You are a medical assistant. A patient has recorded symptoms using voice-to-text. Extract the key symptoms and important details, then present them in a clean, structured bullet list.
 
-Keep it factual and medical. Use bullet points. Remove filler words, repetitions, and non-medical information. Focus on the actual symptoms, their characteristics, and any relevant details.
+Rules:
+- Keep it factual and medical; remove filler words, repetition, and chit-chat.
+- Focus on symptoms, timing, progression, triggers/relievers, and current status.
+- If a detail is not stated, do not invent it.
+- Use short, readable bullets grouped under simple labels.
+
+Output format (exact labels):
+- Symptoms: <comma-separated symptom list>
+- Onset/Timing: <when symptoms started or time of day, if stated>
+- Progression: <better/worse/stable, if stated>
+- Modifiers: <what made it better or worse, if stated>
+- Current status: <how they feel now, if stated>
 
 Transcript:
 "${transcript}"
 
-Return ONLY the formatted bulleted summary, nothing else.`
+Return ONLY the formatted bullets, nothing else.`
           }
         ]
       }),
