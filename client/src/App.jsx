@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
+import patientlyLogo from './assets/Patiently Logo.png'
 import './App.css'
 
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -39,20 +40,24 @@ function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 font-sans">
-      <main
-        className={`container mx-auto px-4 py-6 ${
-          !isAuthPage ? 'mb-20 md:mb-0 md:pl-24' : ''
-        }`}
-      >
-        {!isAuthPage && (
-          <div className="flex items-center justify-between md:hidden mb-4">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg mr-3" />
-              <span className="text-lg font-bold text-stone-900">Patiently</span>
+      {!isAuthPage && (
+        <header className="fixed top-0 right-0 left-0 md:left-64 z-40 bg-stone-50/95 backdrop-blur border-b border-stone-200">
+          <div className="flex items-center justify-between px-4 h-14">
+            <div className="flex items-center md:hidden">
+              <img
+                src={patientlyLogo}
+                alt="Patiently logo"
+                className="w-9 h-9 mr-2 rounded-md object-contain"
+              />
+              <span className="text-base font-bold text-stone-900">
+                Patiently
+              </span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 ml-auto">
               {user && (
-                <span className="text-sm text-stone-600">{user.name}</span>
+                <span className="text-sm text-stone-600 truncate max-w-[140px] sm:max-w-none">
+                  {user.name}
+                </span>
               )}
               <button
                 className="text-sm font-medium text-red-600 bg-red-50 hover:bg-red-600 hover:text-white px-3 py-1 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-200"
@@ -62,30 +67,29 @@ function Layout({ children }) {
               </button>
             </div>
           </div>
-        )}
+        </header>
+      )}
 
+      <main
+        className={`container mx-auto px-4 ${
+          !isAuthPage ? 'pt-20 pb-6 mb-20 md:mb-0 md:pl-24' : 'py-6'
+        }`}
+      >
         {children}
       </main>
 
       {!isAuthPage && (
         <div className="md:fixed md:left-0 md:top-0 md:bottom-0 md:w-64 md:border-r md:border-stone-200 md:bg-white md:z-50">
-          <div className="hidden md:flex items-center p-6 mb-6 justify-between">
+          <div className="hidden md:flex items-center p-6 mb-6">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg mr-3" />
+              <img
+                src={patientlyLogo}
+                alt="Patiently logo"
+                className="w-10 h-10 mr-3 rounded-lg object-contain"
+              />
               <span className="text-xl font-bold text-stone-900">
                 Patiently
               </span>
-            </div>
-            <div className="flex items-center gap-4">
-              {user && (
-                <span className="text-sm text-stone-600">{user.name}</span>
-              )}
-              <button
-                className="text-sm font-medium text-red-600 bg-red-50 hover:bg-red-600 hover:text-white px-3 py-1 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-200"
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
             </div>
           </div>
           <Navigation />

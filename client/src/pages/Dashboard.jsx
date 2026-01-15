@@ -40,10 +40,23 @@ export function Dashboard() {
     { value: 'Other', label: 'Other' },
   ];
 
-  const severityOptions = Array.from({ length: 10 }, (_, i) => ({
-    value: i + 1,
-    label: `${i + 1} - ${i === 0 ? 'Mild' : i === 9 ? 'Severe' : ''}`,
-  }));
+  const severityOptions = [
+    { value: 1, label: '1 - Very Mild' },
+    { value: 2, label: '2 - Minor' },
+    { value: 3, label: '3 - Noticeable' },
+    { value: 4, label: '4 - Moderate' },
+    { value: 5, label: '5 - Moderately Strong' },
+    { value: 6, label: '6 - Moderately Stronger' },
+    { value: 7, label: '7 - Severe' },
+    { value: 8, label: '8 - Intense' },
+    { value: 9, label: '9 - Excruciating' },
+    { value: 10, label: '10 - Worst' },
+  ];
+
+  // const severityOptions = Array.from({ length: 10 }, (_, i) => ({
+  //   value: i + 1,
+  //   label: `${i + 1} - ${i === 0 ? 'Mild' : i === 9 ? 'Severe' : ''}`,
+  // }));
 
   // Map API response to frontend format
   const mapApiEntryToFrontend = (apiEntry) => {
@@ -261,7 +274,7 @@ export function Dashboard() {
         )}
       </header>
 
-      <Card className="overflow-hidden">
+      <Card>
         <div className="flex justify-center space-x-4 mb-6">
           <button
             onClick={() => setInputMode('voice')}
