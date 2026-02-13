@@ -8,9 +8,11 @@ import { Textarea } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Card } from '../components/ui/Card';
 import { VoiceRecorder } from '../components/VoiceRecorder';
+import { Markdown } from '../components/Markdown';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../utils/api';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { toMarkdownFromLabeledText } from '../utils/markdown';
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -184,7 +186,9 @@ export function Dashboard() {
           const aiResponse = await api.formatTranscript(description);
           
           if (aiResponse.choices && aiResponse.choices[0] && aiResponse.choices[0].message) {
-            formattedSymptom = aiResponse.choices[0].message.content.trim();
+            formattedSymptom = toMarkdownFromLabeledText(
+              aiResponse.choices[0].message.content.trim()
+            );
             // Update the description field to show the formatted version
             setDescription(formattedSymptom);
           } else if (aiResponse.error) {
@@ -506,13 +510,13 @@ export function Dashboard() {
                       </div>
                     ) : (
                       <>
-                        <p
-                          className={`text-sm text-stone-500 whitespace-pre-wrap break-words overflow-hidden transition-[max-height] duration-200 ${
-                            isExpanded ? 'max-h-none' : 'max-h-10'
+                        <div
+                          className={`overflow-hidden transition-[max-height] duration-200 ${
+                            isExpanded ? 'max-h-none' : 'max-h-16'
                           }`}
                         >
-                          {entry.description}
-                        </p>
+                          <Markdown>{entry.description}</Markdown>
+                        </div>
                         {shouldShowToggle && (
                           <button
                             type="button"

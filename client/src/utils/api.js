@@ -139,25 +139,24 @@ export const api = {
         messages: [
           {
             role: 'user',
-            content: `You are a medical assistant. A patient has recorded symptoms using voice-to-text. Extract the key symptoms and important details, then present them in a clean, structured bullet list.
+            content: `You are a medical assistant. A patient has recorded symptoms using voice-to-text. Extract the key symptoms and important details and present them in clean, structured plain text.
 
 Rules:
 - Keep it factual and medical; remove filler words, repetition, and chit-chat.
 - Focus on symptoms, timing, progression, triggers/relievers, and current status.
 - If a detail is not stated, do not invent it.
-- Use short, readable bullets grouped under simple labels.
-
-Output format (exact labels):
-- Symptoms: <comma-separated symptom list>
-- Onset/Timing: <when symptoms started or time of day, if stated>
-- Progression: <better/worse/stable, if stated>
-- Modifiers: <what made it better or worse, if stated>
-- Current status: <how they feel now, if stated>
+- Use these exact labels in plain text:
+Symptoms: <comma-separated symptom list>
+Onset/Timing: <when symptoms started or time of day, if stated>
+Progression: <better/worse/stable, if stated>
+Modifiers: <what made it better or worse, if stated>
+Current status: <how they feel now, if stated>
+- Do not use markdown symbols such as #, *, or -.
 
 Transcript:
 "${transcript}"
 
-Return ONLY the formatted bullets, nothing else.`
+Return ONLY the formatted text, nothing else.`
           }
         ]
       }),
@@ -177,37 +176,21 @@ Return ONLY the formatted bullets, nothing else.`
             role: 'user',
             content: `You are a medical assistant helping to create a concise patient symptom summary report for a healthcare provider.
 
-Analyze the following symptom entries and generate a professional, well-structured report that includes:
-
-1. **Onset Date**: When did the patient's issues start? (Identify the earliest symptom date)
-
-2. **Daily Symptom Breakdown**: For each day within the time range, list:
-   - Date
-   - All symptoms reported that day
-   - Severity levels for each symptom
-   - Time of day when symptoms occurred (if available)
-
-3. **Key Patterns & Trends**: 
-   - Most common symptoms
-   - Severity trends (improving, worsening, stable)
-   - Symptom frequency patterns
-   - Any notable correlations
-
-4. **Summary**: A concise overall assessment suitable for a doctor's visit
-
 Symptom Entries Data:
 ${JSON.stringify(entries, null, 2)}
 
 Time Range Requested: Last ${timeRange} days
 
-Format the report with clear sections using markdown headers (## for main sections, ### for subsections). Use bullet points (-) for lists. Use **bold** for emphasis on important information. Be professional, concise, and focus on facts. Make it easy for healthcare providers to quickly understand the patient's symptom timeline and patterns.
+Output requirements:
+1. Create one markdown table with exactly these columns in this order:
+| Date | Symptom Occurred | Description | Pain Level |
+2. Include all relevant symptom rows from the provided data.
+3. Keep each row concise and factual.
+4. After the table, add one concise paragraph summary (3-5 sentences).
+5. Do not include headings, numbered lists, or bullets.
+6. Do not use markdown symbols like #, *, or - outside the table syntax.
 
-Return the report formatted in markdown with proper structure:
-- Use ## for main section headers
-- Use ### for subsection headers  
-- Use bullet points (-) for lists
-- Use **bold** for key information
-- Separate sections with blank lines`
+Return only the table followed by the summary paragraph.`
           }
         ]
       }),

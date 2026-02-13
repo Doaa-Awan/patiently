@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { Activity } from 'lucide-react';
 import { Select } from './ui/Select';
 import { Textarea } from './ui/Input';
+import { Markdown } from './Markdown';
 
 export function TimelineEntry({
   entry,
@@ -138,9 +139,7 @@ export function TimelineEntry({
             </div>
           </div>
         ) : (
-          <p className="text-stone-600 text-sm leading-relaxed">
-            {entry.description}
-          </p>
+          <Markdown>{entry.description}</Markdown>
         )}
 
         <div className="mt-4 pt-3 border-t border-stone-100 flex justify-between items-center">

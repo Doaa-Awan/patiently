@@ -7,98 +7,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Select } from '../components/ui/Select';
-
-// Format markdown-like text to HTML
-const formatReportText = (text) => {
-  if (!text) return '';
-
-  // Split into lines for processing
-  const lines = text.split('\n');
-  const output = [];
-  let inBulletList = false;
-  let inNumberedList = false;
-  let bulletItems = [];
-  let numberedItems = [];
-
-  const closeBulletList = () => {
-    if (bulletItems.length > 0) {
-      output.push(`<ul class="list-disc list-inside space-y-1 my-3 ml-4">${bulletItems.join('')}</ul>`);
-      bulletItems = [];
-      inBulletList = false;
-    }
-  };
-
-  const closeNumberedList = () => {
-    if (numberedItems.length > 0) {
-      output.push(`<ol class="list-decimal list-inside space-y-1 my-3 ml-4">${numberedItems.join('')}</ol>`);
-      numberedItems = [];
-      inNumberedList = false;
-    }
-  };
-
-  const closeAllLists = () => {
-    closeBulletList();
-    closeNumberedList();
-  };
-
-  lines.forEach((line) => {
-    const trimmed = line.trim();
-
-    // Headers
-    if (trimmed.startsWith('### ')) {
-      closeAllLists();
-      output.push(`<h3 class="text-lg font-semibold text-stone-900 mt-6 mb-3">${formatInlineMarkdown(trimmed.substring(4))}</h3>`);
-    } else if (trimmed.startsWith('## ')) {
-      closeAllLists();
-      output.push(`<h2 class="text-xl font-bold text-stone-900 mt-6 mb-3">${formatInlineMarkdown(trimmed.substring(3))}</h2>`);
-    } else if (trimmed.startsWith('# ')) {
-      closeAllLists();
-      output.push(`<h1 class="text-2xl font-bold text-stone-900 mt-6 mb-4">${formatInlineMarkdown(trimmed.substring(2))}</h1>`);
-    }
-    // Bullet points
-    else if (/^[\*\-\•]\s+/.test(trimmed)) {
-      closeNumberedList();
-      if (!inBulletList) {
-        inBulletList = true;
-      }
-      const content = trimmed.replace(/^[\*\-\•]\s+/, '');
-      bulletItems.push(`<li class="mb-1">${formatInlineMarkdown(content)}</li>`);
-    }
-    // Numbered lists
-    else if (/^\d+\.\s+/.test(trimmed)) {
-      closeBulletList();
-      if (!inNumberedList) {
-        inNumberedList = true;
-      }
-      const content = trimmed.replace(/^\d+\.\s+/, '');
-      numberedItems.push(`<li class="mb-1">${formatInlineMarkdown(content)}</li>`);
-    }
-    // Empty line
-    else if (trimmed === '') {
-      closeAllLists();
-    }
-    // Regular paragraph
-    else {
-      closeAllLists();
-      output.push(`<p class="mb-3 leading-relaxed">${formatInlineMarkdown(trimmed)}</p>`);
-    }
-  });
-
-  closeAllLists();
-
-  return output.join('');
-};
-
-// Format inline markdown (bold, etc.)
-const formatInlineMarkdown = (text) => {
-  // Convert bold text
-  let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-stone-900">$1</strong>');
-  
-  // Convert italic text
-  formatted = formatted.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
-  
-  return formatted;
-};
+import { Markdown } from '../components/Markdown';
 
 export function ReportGenerator() {
   const { user } = useAuth();
@@ -111,7 +20,6 @@ export function ReportGenerator() {
   const [report, setReport] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  // Map API response to frontend format
   const mapApiEntryToFrontend = (apiEntry) => {
     return {
       id: apiEntry._id,
@@ -120,23 +28,23 @@ export function ReportGenerator() {
       severity: apiEntry.severity,
       category: apiEntry.category || 'Other',
       userRole: user?.role || 'patient',
-      createdAt: apiEntry.startTime ? new Date(apiEntry.startTime).getTime() : apiEntry.createdAt ? new Date(apiEntry.createdAt).getTime() : Date.now(),
+      createdAt: apiEntry.startTime
+        ? new Date(apiEntry.startTime).getTime()
+        : apiEntry.createdAt
+          ? new Date(apiEntry.createdAt).getTime()
+          : Date.now(),
     };
   };
 
-  // Determine patient ID based on user role and selected patient
   useEffect(() => {
     if (!user) return;
 
     if (user.role === 'patient') {
-      // Patients use their own ID
       setPatientId(user._id);
     } else if (user.role === 'caregiver') {
-      // Caregivers can select a patient
       if (selectedPatient?.id && /^[0-9a-fA-F]{24}$/.test(selectedPatient.id)) {
         setPatientId(selectedPatient.id);
       } else {
-        // If no patient selected, try to get first patient
         const fetchFirstPatient = async () => {
           try {
             const result = await api.getAllUsers('patient');
@@ -155,7 +63,6 @@ export function ReportGenerator() {
     }
   }, [user, selectedPatient]);
 
-  // Fetch entries from API
   useEffect(() => {
     if (!patientId || !user) {
       setIsLoadingEntries(false);
@@ -167,7 +74,7 @@ export function ReportGenerator() {
       setIsLoadingEntries(true);
       try {
         const result = await api.getPatientSymptoms(patientId);
-        
+
         if (result.success && result.data) {
           const mappedEntries = result.data.map(mapApiEntryToFrontend);
           setEntries(mappedEntries);
@@ -198,7 +105,6 @@ export function ReportGenerator() {
       const days = parseInt(timeRange, 10);
       const cutoffDate = subDays(new Date(), days);
 
-      // Filter entries within time range
       const relevantEntries = entries.filter(
         (e) => new Date(e.date) >= cutoffDate
       );
@@ -209,7 +115,6 @@ export function ReportGenerator() {
         return;
       }
 
-      // Format entries for AI processing
       const formattedEntries = relevantEntries.map((entry) => ({
         date: format(new Date(entry.date), 'yyyy-MM-dd'),
         time: format(new Date(entry.date), 'HH:mm'),
@@ -218,11 +123,10 @@ export function ReportGenerator() {
         severity: entry.severity,
       }));
 
-      // Call OpenRouter API to generate report
       const response = await api.generateReport(formattedEntries, timeRange);
 
       if (response.choices && response.choices[0] && response.choices[0].message) {
-        const aiReport = response.choices[0].message.content;
+        const aiReport = response.choices[0].message.content.trim();
         setReport(aiReport);
       } else if (response.error) {
         throw new Error(response.error || 'Failed to generate report');
@@ -343,10 +247,9 @@ export function ReportGenerator() {
             </div>
           </div>
 
-          <div 
-            className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm text-base leading-relaxed text-stone-700"
-            dangerouslySetInnerHTML={{ __html: formatReportText(report) }}
-          />
+          <div className="bg-white rounded-xl border border-stone-200 p-6 shadow-sm text-base leading-relaxed text-stone-700">
+            <Markdown>{report}</Markdown>
+          </div>
         </div>
       )}
     </div>
