@@ -1,5 +1,6 @@
-//.env config
-require('dotenv').config();
+// Load env from server/.env regardless of where node is started from
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const express = require('express');
 const app = express();
 const { connectDB } = require("./db/db");
